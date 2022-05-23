@@ -1,14 +1,23 @@
-import { FC } from 'react';
-import { ICharactersProps } from './interfaces';
-
-// react-query
+import { FC, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
-import { fetchCharacters } from './apis';
+import { ICharactersProps } from './interfaces';
 import { ICharacter } from './components/character/interfaces';
+import { fetchCharacters } from './apis';
 import Character from './components/character';
 
 const Characters: FC<ICharactersProps> = () => {
-    const { data, status } = useQuery('characters', fetchCharacters);
+    // component states
+    const [page, setPage] = useState<number>(1);
+
+    // react-query
+    const { data, status, isPreviousData } = useQuery(
+        ['characters', page],
+        fetchCharacters,
+        {
+            keepPreviousData: true,
+            cacheTime: 1000
+        }
+    );
 
     if (status.toLowerCase() === 'loading') {
         return <div>Loading...</div>;
@@ -44,6 +53,21 @@ const Characters: FC<ICharactersProps> = () => {
                         <Character key={character.id} character={character} />
                     );
                 })}
+
+            <div>
+                <button
+                    disabled={!data.info.prev}
+                    onClick={() => setPage(page - 1)}
+                >
+                    Previous
+                </button>
+                <button
+                    disabled={isPreviousData || !data.info.next}
+                    onClick={() => setPage(page + 1)}
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };
